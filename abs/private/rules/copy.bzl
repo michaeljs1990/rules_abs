@@ -17,7 +17,7 @@ limitations under the License.
 
 load("//abs/private:providers.bzl", "RemotePath")
 
-# TODO: support Windows
+# TODO: Windows is not supported and likely won't be unless you add it
 
 def _copy_impl(ctx):
     out = ctx.actions.declare_file(ctx.attr.name)

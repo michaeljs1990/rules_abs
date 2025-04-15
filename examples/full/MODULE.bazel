@@ -26,6 +26,23 @@ bazel_dep(
     version = "0.0.11",
 )
 
+abs_file = use_repo_rule("@rules_abs//abs:repo_rules.bzl", "abs_file")
+
+abs_file(
+    name = "azure_cli_2_66_1",
+    sha256 = "9567c5e8d7fe0d4dc9351b85fdab254ccc5f4218c4def688f44d7e76c20a3d29",
+    url = "https://adasmonorepo.blob.core.windows.net/junk/azure-cli-2.66.1-x64.zip",
+)
+
+abs_archive = use_repo_rule("@rules_abs//abs:repo_rules.bzl", "abs_archive")
+
+abs_archive(
+    name = "azure_cli_2_66_1_zip",
+    build_file_content = """exports_files(glob(["**"]))""",
+    sha256 = "9567c5e8d7fe0d4dc9351b85fdab254ccc5f4218c4def688f44d7e76c20a3d29",
+    url = "https://adasmonorepo.blob.core.windows.net/junk/azure-cli-2.66.1-x64.zip",
+)
+
 # Fetching individual blobs works just like `http_file`
 
 s3_file = use_repo_rule("@rules_abs//abs:repo_rules.bzl", "s3_file")

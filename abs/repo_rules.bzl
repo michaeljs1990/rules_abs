@@ -17,6 +17,11 @@ limitations under the License.
 
 load("//abs/private/repo_rules:s3_archive.bzl", _s3_archive = "s3_archive")
 load("//abs/private/repo_rules:s3_file.bzl", _s3_file = "s3_file")
+load("//abs/private/repo_rules:abs_file.bzl", _abs_file = "abs_file")
+load("//abs/private/repo_rules:abs_archive.bzl", _abs_archive = "abs_archive")
 
 s3_file = _s3_file
 s3_archive = _s3_archive
+
+abs_file = _abs_file
+abs_archive = _abs_archive

@@ -1,6 +1,28 @@
 exports_files(["check_file_hash.sh"])
 
 sh_test(
+    name = "check_release_azure_cli_2_66_1",
+    srcs = ["check_file_hash.sh"],
+    args = [
+        "$(location @azure_cli_2_66_1//file)",
+        "9567c5e8d7fe0d4dc9351b85fdab254ccc5f4218c4def688f44d7e76c20a3d29",
+    ],
+    data = ["@azure_cli_2_66_1//file"],
+)
+
+
+sh_test(
+    name = "check_release_azure_cli_2_66_1_zip",
+    srcs = ["check_file_hash.sh"],
+    args = [
+        "$(location @azure_cli_2_66_1_zip//:CLI_LICENSE.rtf)",
+        "fa90c363aca1323a7846b79f95046daaaa7d75e2e7045cdeaa9cb1273dc92501",
+    ],
+    data = ["@azure_cli_2_66_1_zip//:CLI_LICENSE.rtf"],
+)
+
+
+sh_test(
     name = "check_release_notes_1_30_2",
     srcs = ["check_file_hash.sh"],
     args = [

@@ -15,15 +15,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-load("//abs/private:util.bzl", "download_and_extract_args", "parse_s3_url")
+load("//abs/private:util.bzl", "download_and_extract_abs_args", "parse_abs_url")
 
-def _s3_archive_impl(repository_ctx):
-    s3_url = repository_ctx.attr.url
-    target = parse_s3_url(s3_url)
-    repository_ctx.report_progress("Fetching {}".format(s3_url))
+def _abs_archive_impl(repository_ctx):
+    url = repository_ctx.attr.url
+    target = parse_abs_url(url)
+    repository_ctx.report_progress("Fetching {}".format(url))
 
     # download && extract the repo
-    args = download_and_extract_args(repository_ctx.attr, target["bucket_name"], target["remote_path"])
+    args = download_and_extract_abs_args(repository_ctx.attr, target["storage_account_name"], target["remote_path"])
     repository_ctx.download_and_extract(**args)
 
     # apply patches after extraction has finished
@@ -40,7 +40,7 @@ def _s3_archive_impl(repository_ctx):
     if has_build_file_label:
         repository_ctx.file("BUILD.bazel", repository_ctx.read(repository_ctx.attr.build_file))
 
-_s3_archive_doc = """Downloads a Bazel repository as a compressed archive file from an S3 bucket, decompresses it,
+_abs_archive_doc = """Downloads a Bazel repository as a compressed archive file from an Azure Blob Storage account, decompresses it,
 and makes its targets available for binding.
 
 It supports the following file extensions: `"zip"`, `"jar"`, `"war"`, `"aar"`, `"tar"`,
@@ -49,7 +49,7 @@ or `"deb"`.
 
 Examples:
   Suppose your code depends on a private library packaged as a `.tar.gz`
-  which is available from s3://my_org_code/libmagic.tar.gz. This `.tar.gz` file
+  which is available from https://myorg.blob.core.windows.net/libmagic.tar.gz. This `.tar.gz` file
   contains the following directory structure:
 
   ```
@@ -74,11 +74,11 @@ Examples:
   following lines are added to `MODULE.bazel`:
 
   ```starlark
-  s3_archive = use_repo_rule("@rules_s3//s3:repo_rules.bzl", "s3_archive")
+  abs_archive = use_repo_rule("@rulesabs//abs:repo_rules.bzl", "abs_archive")
 
-  s3_archive(
+  abs_archive(
       name = "magic",
-      url = "s3://my_org_code/libmagic.tar.gz",
+      url = "https://myorg.blob.core.windows.net/libmagic.tar.gz",
       sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       build_file = "@//:magic.BUILD",
   )
@@ -87,7 +87,7 @@ Examples:
   Then targets would specify `@magic//:lib` as a dependency.
 """
 
-_s3_archive_attrs = {
+_abs_archive_attrs = {
     "build_file": attr.label(
         allow_single_file = True,
         doc =
@@ -181,33 +181,12 @@ following: `"zip"`, `"jar"`, `"war"`, `"aar"`, `"tar"`, `"tar.gz"`, `"tgz"`,
     ),
     "url": attr.string(
         mandatory = True,
-        doc = "A URL to a file that will be made available to Bazel.\nThis must be a 's3://' URL.",
-    ),
-    "endpoint": attr.string(
-        default = "s3.amazonaws.com",
-        doc = """Optional S3 endpoint (for AWS regional endpoint or S3-compatible object storage).
-If not set, the AWS S3 global endpoint "s3.amazonaws.com" is used.
-
-Examples: AWS regional endpoint (`s3.<region-code>.amazonaws.com`): `"s3.us-west-2.amazonaws.com"`, Cloudflare R2 endpoint (`<accountid>.r2.cloudflarestorage.com`): `"12345.r2.cloudflarestorage.com"`.
-""",
-    ),
-    "endpoint_style": attr.string(
-        values = ["virtual-hosted", "path"],
-        doc = """Optional URL style to be used.
-AWS strongly recommends virtual-hosted-style, where the request is encoded as follows:
-    https://bucket-name.s3.region-code.amazonaws.com/key-name
-
-Path-style URLs on the other hand include the bucket name as part of the URL path:
-    https://s3.region-code.amazonaws.com/bucket-name/key-name
-
-S3-compatible object storage varies in the supported styles, but the path-style is more common.
-If unset, a default style is chosen based on the endpoint: "*.amazonaws.com": virtual-hosted, "*.r2.cloudflarestorage.com": path, generic: path.
-""",
+        doc = "A URL to a file that will be made available to Bazel.\nThis must be a 'http[s]://' URL.",
     ),
 }
 
-s3_archive = repository_rule(
-    implementation = _s3_archive_impl,
-    attrs = _s3_archive_attrs,
-    doc = _s3_archive_doc,
+abs_archive = repository_rule(
+    implementation = _abs_archive_impl,
+    attrs = _abs_archive_attrs,
+    doc = _abs_archive_doc,
 )

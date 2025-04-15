@@ -40,6 +40,35 @@ def parse_s3_url(url):
         "remote_path": remote_path,
     }
 
+def parse_abs_url(url):
+    """
+    Parses a URL of the form `https://STORAGE_ACCOUNT/remote/path/to/object` into
+    a dict with fields "storage_account_name" and "remote_path".
+    """
+    if type(url) != type(""):
+        fail("expected string, got {}".format(type(url)))
+    if not url.startswith("https://") and not url.startswith("http://"):
+        fail("expected URL with scheme 'https' or 'http', got {}".format(type(url)))
+
+    if url.startswith("https://"):
+        bucket_name_and_remote_path = url.removeprefix("https://")
+    if url.startswith("http://"):
+        bucket_name_and_remote_path = url.removeprefix("http://")
+
+    
+    if not "/" in bucket_name_and_remote_path:
+        fail("expected URL with format 'http[s]://STORAGE_ACCOUNT/remote/path/to/object'")
+    (storage_account_name, _, remote_path) = bucket_name_and_remote_path.partition("/")
+    if len(storage_account_name) == 0:
+        fail("expected URL with non-empty bucket name")
+    if len(remote_path) == 0:
+        fail("expected URL with non-empty path")
+    return {
+        "storage_account_name": storage_account_name,
+        "remote_path": remote_path,
+    }
+
+
 def repository_ctx_download_common_args(attr, bucket_name, remote_path):
     has_integrity = len(attr.integrity) > 0
     has_sha256 = len(attr.sha256) > 0
@@ -54,6 +83,37 @@ def repository_ctx_download_common_args(attr, bucket_name, remote_path):
         args.update({"canonical_id": attr.canonical_id})
     return args
 
+def repository_ctx_download_abs_common_args(attr, bucket_name, remote_path):
+    has_integrity = len(attr.integrity) > 0
+    has_sha256 = len(attr.sha256) > 0
+    if has_integrity == has_sha256:
+        fail("expected exactly one of \"integrity\" and \"sha256\"")
+    args = {
+        "url": attr.url,
+        "sha256": attr.sha256,
+        "integrity": attr.integrity,
+        # Required for interacting with the azure API
+        # TODO: Make this configurable
+        "headers": {
+            "x-ms-version": "2020-04-08",
+        },
+    }
+    if len(attr.canonical_id) > 0:
+        args.update({"canonical_id": attr.canonical_id})
+    return args
+
+
+def download_abs_args(attr, bucket_name, remote_path):
+    args = repository_ctx_download_abs_common_args(attr, bucket_name, remote_path)
+    output = attr.downloaded_file_path if attr.downloaded_file_path else remote_path
+    args.update({
+        "output": output,
+        "executable": attr.executable,
+    })
+    if have_unblocked_downloads():
+        args["block"] = False
+    return args
+
 def download_args(attr, bucket_name, remote_path):
     args = repository_ctx_download_common_args(attr, bucket_name, remote_path)
     output = attr.downloaded_file_path if attr.downloaded_file_path else remote_path
@@ -64,6 +124,20 @@ def download_args(attr, bucket_name, remote_path):
     if have_unblocked_downloads():
         args["block"] = False
     return args
+
+def download_and_extract_abs_args(attr, bucket_name, remote_path):
+    args = repository_ctx_download_abs_common_args(attr, bucket_name, remote_path)
+    args.update({
+        "type": attr.type,
+        "stripPrefix": attr.strip_prefix,
+        "rename_files": attr.rename_files,
+    })
+    bazel_version = _parse_bazel_version(native.bazel_version)
+    if bazel_version[0] < 6:
+        # Bazel versions before 6.0.0 do not support the "rename_files" attribute
+        args.pop("rename_files")
+    return args
+
 
 def download_and_extract_args(attr, bucket_name, remote_path):
     args = repository_ctx_download_common_args(attr, bucket_name, remote_path)
