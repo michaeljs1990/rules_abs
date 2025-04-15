@@ -1,0 +1,21 @@
+load("@stardoc//stardoc:stardoc.bzl", "stardoc")
+
+stardoc(
+    name = "repo_rules",
+    out = "repo_rules.md",
+    input = "//abs:repo_rules.bzl",
+    deps = ["//abs/private/repo_rules"],
+)
+
+stardoc(
+    name = "extensions",
+    out = "extensions.md",
+    input = "//abs:extensions.bzl",
+    deps = ["//abs/private/extensions"],
+)
+
+filegroup(
+    name = "all_files",
+    srcs = glob(["*"]),
+    visibility = ["//:__subpackages__"],
+)
