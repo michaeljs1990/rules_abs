@@ -1,61 +1,61 @@
 load("@bazel_skylib//lib:selects.bzl", "selects")
 
-# alias(
-#     name = "kubectl",
-#     actual = select({
-#         ":darwin_amd64": "@kubectl_binaries//:release/v1.30.3/bin/darwin/amd64/kubectl",
-#         ":darwin_arm64": "@kubectl_binaries//:release/v1.30.3/bin/darwin/amd64/kubectl",
-#         ":linux_amd64": "@kubectl_binaries//:release/v1.30.3/bin/linux/amd64/kubectl",
-#         ":linux_arm64": "@kubectl_binaries//:release/v1.30.3/bin/linux/arm64/kubectl",
-#     }),
-# )
+alias(
+    name = "hello",
+    actual = select({
+        ":darwin_amd64": "@container_files//:public/darwin/amd64/hello",
+        ":darwin_arm64": "@container_files//:public/darwin/arm64/hello",
+        ":linux_amd64": "@container_files//:public/linux/amd64/hello",
+        ":linux_arm64": "@container_files//:public/linux/arm64/hello",
+    }),
+)
 
-# selects.config_setting_group(
-#     name = "linux_amd64",
-#     match_all = [
-#         "@platforms//os:linux",
-#         "@platforms//cpu:x86_64",
-#     ],
-# )
+selects.config_setting_group(
+    name = "linux_amd64",
+    match_all = [
+        "@platforms//os:linux",
+        "@platforms//cpu:x86_64",
+    ],
+)
 
-# selects.config_setting_group(
-#     name = "linux_arm64",
-#     match_all = [
-#         "@platforms//os:linux",
-#         "@platforms//cpu:arm64",
-#     ],
-# )
+selects.config_setting_group(
+    name = "linux_arm64",
+    match_all = [
+        "@platforms//os:linux",
+        "@platforms//cpu:arm64",
+    ],
+)
 
-# selects.config_setting_group(
-#     name = "darwin_amd64",
-#     match_all = [
-#         "@platforms//os:macos",
-#         "@platforms//cpu:x86_64",
-#     ],
-# )
+selects.config_setting_group(
+    name = "darwin_amd64",
+    match_all = [
+        "@platforms//os:macos",
+        "@platforms//cpu:x86_64",
+    ],
+)
 
-# selects.config_setting_group(
-#     name = "darwin_arm64",
-#     match_all = [
-#         "@platforms//os:macos",
-#         "@platforms//cpu:arm64",
-#     ],
-# )
+selects.config_setting_group(
+    name = "darwin_arm64",
+    match_all = [
+        "@platforms//os:macos",
+        "@platforms//cpu:arm64",
+    ],
+)
 
-# # sanity check to ensure kubectl is marked executable
-# genrule(
-#     name = "kubectl_version",
-#     outs = ["version.txt"],
-#     cmd = "$(location :kubectl) version --client=true > \"$@\"",
-#     tools = [":kubectl"],
-# )
+# sanity check to ensure kubectl is marked executable
+genrule(
+    name = "output",
+    outs = ["output.txt"],
+    cmd = "$(location :hello) > \"$@\"",
+    tools = [":hello"],
+)
 
-# sh_test(
-#     name = "check_version",
-#     srcs = ["//:check_file_hash.sh"],
-#     args = [
-#         "$(location :kubectl_version)",
-#         "ed42ec8f283c52dae409f0a59c9687d12ec60aeaf54aae2bf459e9d3e2b0de44",
-#     ],
-#     data = [":kubectl_version"],
-# )
+sh_test(
+    name = "check_version",
+    srcs = ["//:check_file_hash.sh"],
+    args = [
+        "$(location :output)",
+        "e9527bd02d2c843ee056eb77dafd160970cea3e121da02b172cc5b7d8b0a2b7f",
+    ],
+    data = [":output"],
+)

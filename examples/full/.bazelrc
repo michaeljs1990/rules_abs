@@ -1,4 +1,6 @@
 # enable credential helper for all S3 requests
+# uncomment the following lines if you are pulling from a private repo
+
 #common --credential_helper=*.blob.core.windows.net=%workspace%/tools/mock-credential-helper
 #common --credential_helper_cache_duration=60s
 #common --credential_helper_timeout=10s
