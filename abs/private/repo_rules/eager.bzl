@@ -15,17 +15,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-load("//abs/private:util.bzl", "bucket_url", "deps_from_file", "have_unblocked_downloads")
+load("//abs/private:util.bzl", "deps_from_file", "have_unblocked_downloads", "storage_account_url")
 
 def _eager_impl(repository_ctx):
-    repository_ctx.report_progress("Downloading files from s3://{}".format(repository_ctx.attr.lockfile))
+    repository_ctx.report_progress("Downloading files from lockfile {}".format(repository_ctx.attr.lockfile))
     deps = deps_from_file(repository_ctx, repository_ctx.attr.lockfile, repository_ctx.attr.lockfile_jsonpath)
-    build_file_content = """load("@rules_abs//abs/private/rules:copy.bzl", "copy")\n"""
+    # build_file_content = """load("@rules_abs//abs/private/rules:copy.bzl", "copy")\n"""
 
     # start downloads
     waiters = []
     for local_path, info in deps.items():
-        args = info_to_download_args(repository_ctx.attr, repository_ctx.attr.bucket, local_path, info)
+        args = info_to_download_args(repository_ctx.attr.storage_account, repository_ctx.attr.container, local_path, info)
         waiters.append(repository_ctx.download(**args))
 
     # populate BUILD file
@@ -36,9 +36,9 @@ def _eager_impl(repository_ctx):
         for waiter in waiters:
             waiter.wait()
 
-def info_to_download_args(attr, bucket_name, local_path, info):
+def info_to_download_args(storage_account, container, local_path, info):
     args = {
-        "url": bucket_url(attr, bucket_name, info["remote_path"]),
+        "url": storage_account_url(storage_account, container, info["remote_path"]),
         "output": local_path,
         "executable": True,
         "block": False,
@@ -54,11 +54,10 @@ def info_to_download_args(attr, bucket_name, local_path, info):
 eager = repository_rule(
     implementation = _eager_impl,
     attrs = {
-        "bucket": attr.string(),
-        "endpoint": attr.string(default = "s3.amazonaws.com"),
-        "endpoint_style": attr.string(values = ["virtual-hosted", "path"]),
+        "storage_account": attr.string(),
+        "container": attr.string(),
         "lockfile": attr.label(
-            doc = "Map of dependency files to load from the S3 bucket",
+            doc = "Map of dependency files to load from Azure Blob Storage",
         ),
         "lockfile_jsonpath": attr.string(),
     },

@@ -21,6 +21,7 @@ def walk_jsonpath(obj, jsonpath):
         return obj
     if type(jsonpath) != type("x"):
         fail("expected jsonpath to be a string")
+
     # We always start at the root object.
     # We can ignore "$".
     if jsonpath[0] == "$":
@@ -78,6 +79,7 @@ def jsonpath_split_array_subscript(path):
         if len(components) != 2:
             fail("expected array access with single quotes to have a closing quote")
         return tuple(components)
+
     # we expect a number
     num, rest = jsonpath_split_decimal_int(path)
     return (int(num), rest)

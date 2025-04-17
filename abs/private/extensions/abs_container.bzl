@@ -15,10 +15,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-load("//abs/private:url_encoding.bzl", "url_encode")
 load("//abs/private:util.bzl", "deps_from_file", "object_repo_name")
+load("//abs/private/repo_rules:abs_file.bzl", _abs_file = "abs_file")
 load("//abs/private/repo_rules:eager.bzl", _eager = "eager")
-load("//abs/private/repo_rules:s3_file.bzl", _s3_file = "s3_file")
 load(
     "//abs/private/repo_rules:hub_repo.bzl",
     _alias_hub_repo = "alias_hub_repo",
@@ -26,7 +25,7 @@ load(
     _symlink_hub_repo = "symlink_hub_repo",
 )
 
-def _s3_bucket_impl(module_ctx):
+def _abs_container_impl(module_ctx):
     blob_repos = {}
     hub_names_seen = {}
     root_module_direct_deps = []
@@ -36,7 +35,7 @@ def _s3_bucket_impl(module_ctx):
     for module in module_ctx.modules:
         for from_file in module.tags.from_file:
             if from_file.name in hub_names_seen:
-                fail("duplicate module names \"{}\" in s3_bucket.from_file".format(from_file.name))
+                fail("duplicate module names \"{}\" in abs_container.from_file".format(from_file.name))
             hub_names_seen[from_file.name] = True
             if from_file.dev_dependency:
                 root_module_direct_dev_deps.append(from_file.name)
@@ -49,12 +48,12 @@ def _s3_bucket_impl(module_ctx):
                     if args["name"] not in blob_repos:
                         blob_repos[args["name"]] = args
                     elif args != blob_repos[args["name"]]:
-                        fail("the blob s3://{}/{} was requested twice with different arguments".format(from_file.bucket, info["remote_path"]))
+                        fail("the blob https://{}/{}/{} was requested twice with different arguments".format(module_ctx.storage_account, module_ctx.container, info["remote_path"]))
             generate_hub_repo(from_file)
 
     # generate all requested blobs
     for args in blob_repos.values():
-        _s3_file(**args)
+        _abs_file(**args)
     return module_ctx.extension_metadata(
         root_module_direct_deps = root_module_direct_deps,
         root_module_direct_dev_deps = root_module_direct_dev_deps,
@@ -62,21 +61,15 @@ def _s3_bucket_impl(module_ctx):
     )
 
 def dep_to_blob_repo(from_file, local_path, info):
-    s3_url = "s3://{}/{}".format(from_file.bucket, info["remote_path"])
-    endpoint = from_file.endpoint if (from_file.endpoint != None and len(from_file.endpoint) > 0) else None
-    endpoint_style = from_file.endpoint_style if (from_file.endpoint_style != None and len(from_file.endpoint_style) > 0) else None
+    url = "https://{}/{}/{}".format(from_file.storage_account, from_file.container, info["remote_path"])
     repo_args = {
-        "name": object_repo_name(from_file.bucket, info["remote_path"]),
+        "name": object_repo_name(from_file.storage_account, from_file.container, info["remote_path"]),
         "downloaded_file_path": local_path,
         "executable": True,
         "sha256": info["sha256"] if "sha256" in info else None,
         "integrity": info["integrity"] if "integrity" in info else None,
-        "url": s3_url,
+        "url": url,
     }
-    if endpoint != None:
-        repo_args["endpoint"] = endpoint
-    if endpoint_style != None:
-        repo_args["endpoint_style"] = endpoint_style
     return repo_args
 
 def generate_hub_repo(from_file_tag):
@@ -94,15 +87,16 @@ def generate_hub_repo(from_file_tag):
         name = from_file_tag.name,
         lockfile = from_file_tag.lockfile,
         lockfile_jsonpath = from_file_tag.lockfile_jsonpath,
-        bucket = from_file_tag.bucket,
+        storage_account = from_file_tag.storage_account,
+        container = from_file_tag.container,
     )
 
-_s3_bucket_doc = """Downloads a collection of objects from an S3 bucket and makes them available under a single hub repository name.
+_abs_container_doc = """Downloads a collection of objects from an Azure Storage container and makes them available under a single hub repository name.
 
 Examples:
-  Suppose your code depends on a collection of large assets that are used during code generation or testing. Those assets are stored in a private S3 bucket `s3://my_org_assets`.
+  Suppose your code depends on a collection of large assets that are used during code generation or testing. Those assets are stored in a private Azure Storage container.
 
-  In the local repository, the user creates a `s3_lock.json` JSON lockfile describing the required objects, including their expected hashes:
+  In the local repository, the user creates a `abs_lock.json` JSON lockfile describing the required objects, including their expected hashes:
 
   ```json
     {
@@ -132,15 +126,16 @@ Examples:
   following lines are added to `MODULE.bazel`:
 
   ```starlark
-  s3_bucket = use_extension("@rules_abs//abs:extensions.bzl", "s3_bucket")
-  s3_bucket.from_file(
+  abs_container = use_extension("@rules_abs//abs:extensions.bzl", "abs_container")
+  abs_container.from_file(
       name = "trainingdata",
-      bucket = "my_org_assets",
+      container = "stuff",
+      storage_account = "my_org_assets",
       lockfile = "@//:s3_lock.json",
   )
   ```
 
-  Then targets would specify labels like `@trainingdata//:trainingdata/model/very_large.bin` as a dependency.
+  Then targets would specify labels like `@trainingdata//:stuff/trainingdata/model/very_large.bin` as a dependency.
 """
 
 _from_file_attrs = {
@@ -148,33 +143,16 @@ _from_file_attrs = {
         doc = "Name of the hub repository containing referencing all blobs",
         mandatory = True,
     ),
-    "bucket": attr.string(
-        doc = "Name of the S3 bucket",
+    "storage_account": attr.string(
+        doc = "Name of the Azure Storage Account",
         mandatory = True,
     ),
-    "endpoint": attr.string(
-        default = "s3.amazonaws.com",
-        doc = """Optional S3 endpoint (for AWS regional endpoint or S3-compatible object storage).
-If not set, the AWS S3 global endpoint "s3.amazonaws.com" is used.
-
-Examples: AWS regional endpoint (`s3.<region-code>.amazonaws.com`): `"s3.us-west-2.amazonaws.com"`, Cloudflare R2 endpoint (`<accountid>.r2.cloudflarestorage.com`): `"12345.r2.cloudflarestorage.com"`.
-""",
-    ),
-    "endpoint_style": attr.string(
-        values = ["virtual-hosted", "path"],
-        doc = """Optional URL style to be used.
-AWS strongly recommends virtual-hosted-style, where the request is encoded as follows:
-    https://bucket-name.s3.region-code.amazonaws.com/key-name
-
-Path-style URLs on the other hand include the bucket name as part of the URL path:
-    https://s3.region-code.amazonaws.com/bucket-name/key-name
-
-S3-compatible object storage varies in the supported styles, but the path-style is more common.
-If unset, a default style is chosen based on the endpoint: "*.amazonaws.com": virtual-hosted, "*.r2.cloudflarestorage.com": path, generic: path.
-""",
+    "container": attr.string(
+        doc = "Name of the container in the storage account",
+        mandatory = True,
     ),
     "lockfile": attr.label(
-        doc = "JSON lockfile containing objects to load from the S3 bucket",
+        doc = "JSON lockfile containing objects to load from the Azure Storage Account container",
         mandatory = True,
     ),
     "lockfile_jsonpath": attr.string(
@@ -199,10 +177,10 @@ _from_file_tag = tag_class(
     attrs = _from_file_attrs,
 )
 
-s3_bucket = module_extension(
-    implementation = _s3_bucket_impl,
+abs_container = module_extension(
+    implementation = _abs_container_impl,
     tag_classes = {
         "from_file": _from_file_tag,
     },
-    doc = _s3_bucket_doc,
+    doc = _abs_container_doc,
 )

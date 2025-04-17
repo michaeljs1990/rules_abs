@@ -27,7 +27,6 @@ bazel_dep(
 )
 
 abs_file = use_repo_rule("@rules_abs//abs:repo_rules.bzl", "abs_file")
-
 abs_file(
     name = "azure_cli_2_66_1",
     sha256 = "9567c5e8d7fe0d4dc9351b85fdab254ccc5f4218c4def688f44d7e76c20a3d29",
@@ -35,7 +34,6 @@ abs_file(
 )
 
 abs_archive = use_repo_rule("@rules_abs//abs:repo_rules.bzl", "abs_archive")
-
 abs_archive(
     name = "azure_cli_2_66_1_zip",
     build_file_content = """exports_files(glob(["**"]))""",
@@ -43,79 +41,89 @@ abs_archive(
     url = "https://adasmonorepo.blob.core.windows.net/junk/azure-cli-2.66.1-x64.zip",
 )
 
-# Fetching individual blobs works just like `http_file`
-
-s3_file = use_repo_rule("@rules_abs//abs:repo_rules.bzl", "s3_file")
-
-s3_file(
-    name = "k8s_1_30_2_release_notes",
-    sha256 = "e879f76b7bac8effe4cc53bce034f258ce15b2825f3018c7078f25e832c3feb8",
-    url = "s3://malte-s3-public-test/release/v1.30.2/release-notes.json",
-    endpoint = "s3.eu-north-1.amazonaws.com",
+abs_container= use_extension("@rules_abs//abs:extensions.bzl", "abs_container")
+abs_container.from_file(
+    name = "what",
+    container = "junk",
+    storage_account = "adasmonorepo.blob.core.windows.net",
+    lockfile = "//:abs_lock.json",
 )
 
-s3_file(
-    name = "k8s_1_30_3_release_notes",
-    integrity = "sha256-kJtiyAtc4fUHXJyTAfeWc3J6d8RqUl8SxHUzcFNr/iw=",
-    url = "s3://malte-s3-public-test/release/v1.30.3/release-notes.json",
-    endpoint = "s3.eu-north-1.amazonaws.com",
-)
+use_repo(abs_container, "what")
 
-# Fetching an archive works just like `http_archive`
+# # Fetching individual blobs works just like `http_file`
 
-s3_archive = use_repo_rule("@rules_abs//abs:repo_rules.bzl", "s3_archive")
+# s3_file = use_repo_rule("@rules_abs//abs:repo_rules.bzl", "s3_file")
 
-s3_archive(
-    name = "kubernetes_1_30_3",
-    build_file_content = """exports_files(glob(["**"]))""",
-    integrity = "sha256-9x9WRt4Xw8n3IgE9T1PlChVoInD1YXrAYdQw6moWAM0=",
-    strip_prefix = "kubernetes",
-    url = "s3://malte-s3-public-test/release/v1.30.3/kubernetes.tar.gz",
-    endpoint = "s3.eu-north-1.amazonaws.com",
-)
+# s3_file(
+#     name = "k8s_1_30_2_release_notes",
+#     sha256 = "e879f76b7bac8effe4cc53bce034f258ce15b2825f3018c7078f25e832c3feb8",
+#     url = "s3://malte-s3-public-test/release/v1.30.2/release-notes.json",
+#     endpoint = "s3.eu-north-1.amazonaws.com",
+# )
 
-# If you want to fetch a large number of objects from a bucket, you can use a JSON lockfile
+# s3_file(
+#     name = "k8s_1_30_3_release_notes",
+#     integrity = "sha256-kJtiyAtc4fUHXJyTAfeWc3J6d8RqUl8SxHUzcFNr/iw=",
+#     url = "s3://malte-s3-public-test/release/v1.30.3/release-notes.json",
+#     endpoint = "s3.eu-north-1.amazonaws.com",
+# )
 
-s3_bucket = use_extension("@rules_abs//abs:extensions.bzl", "s3_bucket")
-s3_bucket.from_file(
-    name = "kubectl_binaries",
-    bucket = "malte-abs-public-test",
-    endpoint = "abs.eu-north-1.amazonaws.com",
-    lockfile = "//:s3_lock.json",
-)
+# # Fetching an archive works just like `http_archive`
 
-# If needed, you can specify how the data should be fetched:
-#  - symlink: lazy loading with a hub repo consisting of symlinks to blob repos
-#  - alias: lazy loading with a hub repo consisting of alias targets to the blob repos
-#  - copy: lazy loading with full file copies of blob contents
-#  - eager: all blobs are eagerly fetched into one repo
+# s3_archive = use_repo_rule("@rules_abs//abs:repo_rules.bzl", "s3_archive")
 
-s3_bucket.from_file(
-    name = "symlink_hub_repo",
-    bucket = "malte-abs-public-test",
-    endpoint = "abs.eu-north-1.amazonaws.com",
-    lockfile = "//:s3_lock.json",
-    method = "symlink",
-)
-s3_bucket.from_file(
-    name = "alias_hub_repo",
-    bucket = "malte-abs-public-test",
-    endpoint = "abs.eu-north-1.amazonaws.com",
-    lockfile = "//:s3_lock.json",
-    method = "alias",
-)
-s3_bucket.from_file(
-    name = "copy_hub_repo",
-    bucket = "malte-abs-public-test",
-    endpoint = "abs.eu-north-1.amazonaws.com",
-    lockfile = "//:s3_lock.json",
-    method = "copy",
-)
-s3_bucket.from_file(
-    name = "eager_repo",
-    bucket = "malte-abs-public-test",
-    endpoint = "abs.eu-north-1.amazonaws.com",
-    lockfile = "//:s3_lock.json",
-    method = "eager",
-)
-use_repo(s3_bucket, "alias_hub_repo", "copy_hub_repo", "eager_repo", "kubectl_binaries", "symlink_hub_repo")
+# s3_archive(
+#     name = "kubernetes_1_30_3",
+#     build_file_content = """exports_files(glob(["**"]))""",
+#     integrity = "sha256-9x9WRt4Xw8n3IgE9T1PlChVoInD1YXrAYdQw6moWAM0=",
+#     strip_prefix = "kubernetes",
+#     url = "s3://malte-s3-public-test/release/v1.30.3/kubernetes.tar.gz",
+#     endpoint = "s3.eu-north-1.amazonaws.com",
+# )
+
+# # If you want to fetch a large number of objects from a bucket, you can use a JSON lockfile
+
+# s3_bucket = use_extension("@rules_abs//abs:extensions.bzl", "s3_bucket")
+# s3_bucket.from_file(
+#     name = "kubectl_binaries",
+#     bucket = "malte-abs-public-test",
+#     endpoint = "abs.eu-north-1.amazonaws.com",
+#     lockfile = "//:s3_lock.json",
+# )
+
+# # If needed, you can specify how the data should be fetched:
+# #  - symlink: lazy loading with a hub repo consisting of symlinks to blob repos
+# #  - alias: lazy loading with a hub repo consisting of alias targets to the blob repos
+# #  - copy: lazy loading with full file copies of blob contents
+# #  - eager: all blobs are eagerly fetched into one repo
+
+# s3_bucket.from_file(
+#     name = "symlink_hub_repo",
+#     bucket = "malte-abs-public-test",
+#     endpoint = "abs.eu-north-1.amazonaws.com",
+#     lockfile = "//:s3_lock.json",
+#     method = "symlink",
+# )
+# s3_bucket.from_file(
+#     name = "alias_hub_repo",
+#     bucket = "malte-abs-public-test",
+#     endpoint = "abs.eu-north-1.amazonaws.com",
+#     lockfile = "//:s3_lock.json",
+#     method = "alias",
+# )
+# s3_bucket.from_file(
+#     name = "copy_hub_repo",
+#     bucket = "malte-abs-public-test",
+#     endpoint = "abs.eu-north-1.amazonaws.com",
+#     lockfile = "//:s3_lock.json",
+#     method = "copy",
+# )
+# s3_bucket.from_file(
+#     name = "eager_repo",
+#     bucket = "malte-abs-public-test",
+#     endpoint = "abs.eu-north-1.amazonaws.com",
+#     lockfile = "//:s3_lock.json",
+#     method = "eager",
+# )
+# use_repo(s3_bucket, "alias_hub_repo", "copy_hub_repo", "eager_repo", "kubectl_binaries", "symlink_hub_repo")

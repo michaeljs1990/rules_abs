@@ -16,7 +16,7 @@ limitations under the License.
 """
 
 # load("//abs/private:url_encoding.bzl", "url_encode")
-load("//abs/private:util.bzl", "download_abs_args", "parse_abs_url", "have_unblocked_downloads")
+load("//abs/private:util.bzl", "download_abs_args", "have_unblocked_downloads", "parse_abs_url")
 
 def _abs_file_impl(repository_ctx):
     url = repository_ctx.attr.url
@@ -24,7 +24,7 @@ def _abs_file_impl(repository_ctx):
     repository_ctx.report_progress("Fetching {}".format(url))
 
     # start download
-    args = download_abs_args(repository_ctx.attr, target["storage_account_name"], target["remote_path"])
+    args = download_abs_args(repository_ctx.attr, target["remote_path"])
     waiter = repository_ctx.download(**args)
 
     # populate BUILD files

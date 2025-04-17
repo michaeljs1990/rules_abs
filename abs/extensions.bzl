@@ -15,6 +15,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-load("//abs/private/extensions:s3_bucket.bzl", _s3_bucket = "s3_bucket")
+load("//abs/private/extensions:abs_container.bzl", _abs_container = "abs_container")
 
-s3_bucket = _s3_bucket
+abs_container = _abs_container

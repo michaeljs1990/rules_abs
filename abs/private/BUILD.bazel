@@ -21,8 +21,8 @@ bzl_library(
     name = "private",
     srcs = glob(["*.bzl"]),
     visibility = [
-        "//docs:__pkg__",
         "//abs/private:__subpackages__",
+        "//docs:__pkg__",
     ],
 )
 

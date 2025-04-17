@@ -23,7 +23,7 @@ def _abs_archive_impl(repository_ctx):
     repository_ctx.report_progress("Fetching {}".format(url))
 
     # download && extract the repo
-    args = download_and_extract_abs_args(repository_ctx.attr, target["storage_account_name"], target["remote_path"])
+    args = download_and_extract_abs_args(repository_ctx.attr, target["remote_path"])
     repository_ctx.download_and_extract(**args)
 
     # apply patches after extraction has finished
