@@ -1,4 +1,4 @@
-# rules_s3
+# rules_abs
 
 Bazel rules for downloading files from [Azure Blob Storage (ABS)][abs].
 
