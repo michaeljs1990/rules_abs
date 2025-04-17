@@ -1,35 +1,105 @@
 exports_files(["check_file_hash.sh"])
 
 sh_test(
-    name = "check_release_azure_cli_2_66_1",
+    name = "check_readme",
     srcs = ["check_file_hash.sh"],
     args = [
-        "$(location @azure_cli_2_66_1//file)",
-        "9567c5e8d7fe0d4dc9351b85fdab254ccc5f4218c4def688f44d7e76c20a3d29",
+        "$(location @readme//file)",
+        "896162e6c80c4f076a61831c224c289568579a481a228baf6af94f0d73693b3f",
     ],
-    data = ["@azure_cli_2_66_1//file"],
+    data = ["@readme//file"],
 )
 
 
 sh_test(
-    name = "check_release_azure_cli_2_66_1_zip",
+    name = "check_bundle_tar_gz",
     srcs = ["check_file_hash.sh"],
     args = [
-        "$(location @azure_cli_2_66_1_zip//:CLI_LICENSE.rtf)",
-        "fa90c363aca1323a7846b79f95046daaaa7d75e2e7045cdeaa9cb1273dc92501",
+        "$(location @bundle_tar_gz//:bundle/README.md)",
+        "896162e6c80c4f076a61831c224c289568579a481a228baf6af94f0d73693b3f",
     ],
-    data = ["@azure_cli_2_66_1_zip//:CLI_LICENSE.rtf"],
+    data = ["@bundle_tar_gz//:bundle/README.md"],
 )
 
 sh_test(
-    name = "check_test_container",
+    name = "check_container_files",
     srcs = ["check_file_hash.sh"],
     args = [
-        "$(location @what//:junk/azure-cli-2.66.1-x64.zip)",
-        "9567c5e8d7fe0d4dc9351b85fdab254ccc5f4218c4def688f44d7e76c20a3d29",
+        "$(location @container_files//:public/README.md)",
+        "896162e6c80c4f076a61831c224c289568579a481a228baf6af94f0d73693b3f",
     ],
-    data = ["@what//:junk/azure-cli-2.66.1-x64.zip"],
+    data = ["@container_files//:public/README.md"],
 )
+
+sh_test(
+    name = "check_container_files_symlink",
+    srcs = ["check_file_hash.sh"],
+    args = [
+        "$(location @container_files_symlink//:public/custom/local/path/SHA256SUM)",
+        "3ac8ae918da4aa5f0434385f2e8728032d56f59fac7a7f817ccb39ab97d3f014",
+        "$(location @container_files_symlink//:public/README.md)",
+        "896162e6c80c4f076a61831c224c289568579a481a228baf6af94f0d73693b3f",
+        "$(location @container_files_symlink//:public/linux/arm64/hello)",
+        "4700e3857e4ee071b4d02caaa5be9fa8fa941ff5a5f41c5d9fa080983cb6ad0f",
+        "$(location @container_files_symlink//:public/linux/amd64/hello)",
+        "7c14313f0957e3a72f5b4940e143963af590cc5dac42d48a376162351d585920",
+        "$(location @container_files_symlink//:public/darwin/amd64/hello)",
+        "520c31d10131c1acaf0401058a4abf2416b0beb6e243635f26787c659604f1ee",
+        "$(location @container_files_symlink//:public/darwin/arm64/hello)",
+        "3196fec4a6b4b7c8499f6f6cbacef32eae1ceb2f517ec8c1953dbd02145554a9",
+    ],
+    data = [
+        "@container_files_symlink//:public/custom/local/path/SHA256SUM",
+        "@container_files_symlink//:public/README.md",
+        "@container_files_symlink//:public/linux/arm64/hello",
+        "@container_files_symlink//:public/linux/amd64/hello",
+        "@container_files_symlink//:public/darwin/amd64/hello",
+        "@container_files_symlink//:public/darwin/arm64/hello",
+    ],
+)
+
+sh_test(
+    name = "check_container_files_alias",
+    srcs = ["check_file_hash.sh"],
+    args = [
+        "$(location @container_files_alias//:public/README.md)",
+        "896162e6c80c4f076a61831c224c289568579a481a228baf6af94f0d73693b3f",
+    ],
+    data = ["@container_files_alias//:public/README.md"],
+)
+
+sh_test(
+    name = "check_container_files_copy",
+    srcs = ["check_file_hash.sh"],
+    args = [
+        "$(location @container_files_copy//:public/README.md)",
+        "896162e6c80c4f076a61831c224c289568579a481a228baf6af94f0d73693b3f",
+    ],
+    data = ["@container_files_copy//:public/README.md"],
+)
+
+sh_test(
+    name = "check_container_files_eager",
+    srcs = ["check_file_hash.sh"],
+    args = [
+        "$(location @container_files_eager//:public/README.md)",
+        "896162e6c80c4f076a61831c224c289568579a481a228baf6af94f0d73693b3f",
+    ],
+    data = ["@container_files_eager//:public/README.md"],
+)
+
+
+
+# sh_test(
+#     name = "check_local_path",
+#     srcs = ["check_file_hash.sh"],
+#     args = [
+#         "$(location @what//:custom/local/path/azure-cli-2.66.1-x64.zip)",
+#         "9567c5e8d7fe0d4dc9351b85fdab254ccc5f4218c4def688f44d7e76c20a3d29",
+#     ],
+#     data = ["@what//:custom/local/path/azure-cli-2.66.1-x64.zip"],
+# )
+
 
 
 # sh_test(

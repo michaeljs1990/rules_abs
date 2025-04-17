@@ -1,5 +1,21 @@
 {
-    "azure-cli-2.66.1-x64.zip": {
-      "sha256": "9567c5e8d7fe0d4dc9351b85fdab254ccc5f4218c4def688f44d7e76c20a3d29"
+    "README.md": {
+      "sha256": "896162e6c80c4f076a61831c224c289568579a481a228baf6af94f0d73693b3f"
+    },
+    "linux/arm64/hello": {
+      "sha256": "4700e3857e4ee071b4d02caaa5be9fa8fa941ff5a5f41c5d9fa080983cb6ad0f"
+    },
+    "linux/amd64/hello": {
+      "sha256": "7c14313f0957e3a72f5b4940e143963af590cc5dac42d48a376162351d585920"
+    },
+    "darwin/arm64/hello": {
+      "sha256": "3196fec4a6b4b7c8499f6f6cbacef32eae1ceb2f517ec8c1953dbd02145554a9"
+    },
+    "darwin/amd64/hello": {
+      "sha256": "520c31d10131c1acaf0401058a4abf2416b0beb6e243635f26787c659604f1ee"
+    },
+    "custom/local/path/SHA256SUM": {
+      "remote_path": "SHA256SUM",
+      "integrity": "sha256-OsiukY2kql8ENDhfLocoAy1W9Z+sen+BfMs5q5fT8BQ="
     }
 }

@@ -28,28 +28,62 @@ bazel_dep(
 
 abs_file = use_repo_rule("@rules_abs//abs:repo_rules.bzl", "abs_file")
 abs_file(
-    name = "azure_cli_2_66_1",
-    sha256 = "9567c5e8d7fe0d4dc9351b85fdab254ccc5f4218c4def688f44d7e76c20a3d29",
-    url = "https://adasmonorepo.blob.core.windows.net/junk/azure-cli-2.66.1-x64.zip",
+    name = "readme",
+    sha256 = "896162e6c80c4f076a61831c224c289568579a481a228baf6af94f0d73693b3f",
+    url = "https://rulesabs.blob.core.windows.net/public/README.md",
 )
 
 abs_archive = use_repo_rule("@rules_abs//abs:repo_rules.bzl", "abs_archive")
 abs_archive(
-    name = "azure_cli_2_66_1_zip",
+    name = "bundle_tar_gz",
     build_file_content = """exports_files(glob(["**"]))""",
-    sha256 = "9567c5e8d7fe0d4dc9351b85fdab254ccc5f4218c4def688f44d7e76c20a3d29",
-    url = "https://adasmonorepo.blob.core.windows.net/junk/azure-cli-2.66.1-x64.zip",
+    sha256 = "893d40bd6c1768a3f199e4b5d0e1845729345de92a6091eaa9f5fd2f14cb7e61",
+    url = "https://rulesabs.blob.core.windows.net/public/compressed/bundle.tar.gz",
 )
 
 abs_container= use_extension("@rules_abs//abs:extensions.bzl", "abs_container")
 abs_container.from_file(
-    name = "what",
-    container = "junk",
-    storage_account = "adasmonorepo.blob.core.windows.net",
+    name = "container_files",
+    container = "public",
+    storage_account = "rulesabs.blob.core.windows.net",
     lockfile = "//:abs_lock.json",
 )
-
-use_repo(abs_container, "what")
+abs_container.from_file(
+    name = "container_files_symlink",
+    container = "public",
+    storage_account = "rulesabs.blob.core.windows.net",
+    lockfile = "//:abs_lock.json",
+    method = "symlink",
+)
+abs_container.from_file(
+    name = "container_files_alias",
+    container = "public",
+    storage_account = "rulesabs.blob.core.windows.net",
+    lockfile = "//:abs_lock.json",
+    method = "alias",
+)
+abs_container.from_file(
+    name = "container_files_copy",
+    container = "public",
+    storage_account = "rulesabs.blob.core.windows.net",
+    lockfile = "//:abs_lock.json",
+    method = "copy",
+)
+abs_container.from_file(
+    name = "container_files_eager",
+    container = "public",
+    storage_account = "rulesabs.blob.core.windows.net",
+    lockfile = "//:abs_lock.json",
+    method = "eager",
+)
+use_repo(
+    abs_container, 
+    "container_files",
+    "container_files_symlink",
+    "container_files_alias",
+    "container_files_copy",
+    "container_files_eager",
+)
 
 # # Fetching individual blobs works just like `http_file`
 

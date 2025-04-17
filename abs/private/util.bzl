@@ -55,11 +55,6 @@ def repository_ctx_download_abs_common_args(attr, remote_path):
         "url": attr.url,
         "sha256": attr.sha256,
         "integrity": attr.integrity,
-        # Required for interacting with the azure API
-        # TODO: Make this configurable
-        "headers": {
-            "x-ms-version": "2020-04-08",
-        },
     }
     if len(attr.canonical_id) > 0:
         args.update({"canonical_id": attr.canonical_id})

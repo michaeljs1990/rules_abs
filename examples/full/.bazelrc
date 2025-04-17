@@ -1,7 +1,7 @@
 # enable credential helper for all S3 requests
-common --credential_helper=*.blob.core.windows.net=%workspace%/tools/mock-credential-helper
-common --credential_helper_cache_duration=60s
-common --credential_helper_timeout=10s
+#common --credential_helper=*.blob.core.windows.net=%workspace%/tools/mock-credential-helper
+#common --credential_helper_cache_duration=60s
+#common --credential_helper_timeout=10s
 
 # recommended optimization
 common --experimental_repository_cache_hardlinks

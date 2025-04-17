@@ -15,12 +15,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-load("//abs/private:util.bzl", "deps_from_file", "have_unblocked_downloads", "storage_account_url")
+load("//abs/private:util.bzl", "deps_from_file", "have_unblocked_downloads", "storage_account_url", "object_repo_name")
 
 def _eager_impl(repository_ctx):
     repository_ctx.report_progress("Downloading files from lockfile {}".format(repository_ctx.attr.lockfile))
     deps = deps_from_file(repository_ctx, repository_ctx.attr.lockfile, repository_ctx.attr.lockfile_jsonpath)
-    # build_file_content = """load("@rules_abs//abs/private/rules:copy.bzl", "copy")\n"""
+    build_file_content = """load("@rules_abs//abs/private/rules:copy.bzl", "copy")\n"""
 
     # start downloads
     waiters = []
@@ -29,12 +29,30 @@ def _eager_impl(repository_ctx):
         waiters.append(repository_ctx.download(**args))
 
     # populate BUILD file
-    repository_ctx.file("BUILD.bazel", "exports_files(glob([\"**\"]))".format(args["output"]))
+    build_file_content = """exports_files(glob([\"**\"]))"""
+    for local_path, info in deps.items():
+        build_file_content += dep_to_alias_build_file(
+            repository_ctx.attr.storage_account,
+            repository_ctx.attr.container,
+            local_path,
+            info["remote_path"],
+        )
+    repository_ctx.file("BUILD.bazel", build_file_content)
 
     # wait for downloads to finish
     if have_unblocked_downloads():
         for waiter in waiters:
             waiter.wait()
+
+def dep_to_alias_build_file(storage_account, container, local_path, remote_path):
+    template = """
+alias(
+    name = "{}",
+    actual = "{}",
+    visibility = ["//visibility:public"],
+)
+    """
+    return template.format(container + "/" +local_path, ":{}".format(local_path))
 
 def info_to_download_args(storage_account, container, local_path, info):
     args = {
