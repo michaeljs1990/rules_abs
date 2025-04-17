@@ -4,7 +4,7 @@ Bazel rules for downloading files from [Azure Blob Storage (ABS)][abs].
 
 ## Features
 
-- Can be used as a drop-in replacement for `http_file` (`s3_file`) and `http_archive` (`s3_archive`)
+- Can be used as a drop-in replacement for `http_file` (`abs_file`) and `http_archive` (`abs_archive`)
 - Can fetch large amounts of objects lazily from a bucket using the `abs_container` module extension
 - Supports fetching from private buckets using a credential helper
 - Uses Bazel's downloader and the repository cache
@@ -199,7 +199,7 @@ Examples:
       name = "trainingdata",
       container = "stuff",
       storage_account = "my_org_assets",
-      lockfile = "@//:s3_lock.json",
+      lockfile = "@//:abs_lock.json",
   )
   ```
 
@@ -258,6 +258,6 @@ _`rules_abs` is based on [`rules_s3`][rules_s3_github], which was initially deve
 [example_cred_helper]: /examples/full/tools/mock-credential-helper
 [abs]: https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blobs-introduction
 [rules_s3_github]: https://github.com/tweag/rules_s3
-[bcr]: https://registry.bazel.build/modules/rules_s3
+[bcr]: https://registry.bazel.build/modules/rules_abs
 [imax]: https://www.imax.com/en/us/sct
 [tweag-credential-helper]: https://github.com/tweag/credential-helper
