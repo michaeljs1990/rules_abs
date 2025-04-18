@@ -65,6 +65,7 @@ http_jar(
     name = "protobuf-java",
     sha256 = "9072e60fe66cff5d6c0f11a1df21d8f3e4b29b5ee782b45c3fc75f59fbe2b839",
     urls = ["https://repo1.maven.org/maven2/com/google/protobuf/protobuf-java/4.27.0/protobuf-java-4.27.0.jar"],
+    dev_dependency = True,
 )
 
 register_toolchains(
